@@ -49,9 +49,9 @@ app.post("/api/v1/details", (req, res) => {
 
   // Simple validation for required fields
   if (!name || !mail || !number) {
-    return res.status(400).json({
-      status: "Failed",
-      message: "Please provide name, mail, and number for the user",
+    return res.status(201).json({
+      status: "Success",
+      message: "User registered successfully",
     });
   }
 
