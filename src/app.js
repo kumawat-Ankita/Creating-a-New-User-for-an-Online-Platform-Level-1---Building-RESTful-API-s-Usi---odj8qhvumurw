@@ -2,46 +2,85 @@ const fs = require("fs");
 const express = require("express");
 const app = express();
 
-// Importing products from products.json file
-const userDetails = JSON.parse(
+// Importing user details from userDetails.json file
+let userDetails = JSON.parse(
   fs.readFileSync(`${__dirname}/data/userDetails.json`)
 );
 
-//Middlewares
+// Middlewares
 app.use(express.json());
 
-// Write POST endpoint for registering new user
-
-// GET endpoint for sending the details of users
+// GET endpoint for retrieving user details
 app.get("/api/v1/details", (req, res) => {
   res.status(200).json({
     status: "Success",
-    message: "Detail of users fetched successfully",
+    message: "Details of users fetched successfully",
     data: {
       userDetails,
     },
   });
 });
 
-// GET endpoint for sending the products to client by id
+// GET endpoint for retrieving user details by id
 app.get("/api/v1/userdetails/:id", (req, res) => {
-  let { id } = req.params;
-  id *= 1;
-  const details = userDetails.find((details) => details.id === id);
+  const { id } = req.params;
+  const parsedId = parseInt(id);
+
+  const details = userDetails.find((user) => user.id === parsedId);
   if (!details) {
-    return res.status(404).send({
+    return res.status(404).json({
       status: "failed",
-      message: "Product not found!",
+      message: "User not found!",
     });
   } else {
-    res.status(200).send({
+    res.status(200).json({
       status: "success",
-      message: "Details of users fetched successfully",
+      message: "Details of user fetched successfully",
       data: {
         details,
       },
     });
   }
+});
+
+// POST endpoint for adding a new user
+app.post("/api/v1/details", (req, res) => {
+  const { name, mail, number } = req.body;
+
+  // Simple validation for required fields
+  if (!name || !mail || !number) {
+    return res.status(400).json({
+      status: "Failed",
+      message: "Please provide name, mail, and number for the user",
+    });
+  }
+
+  // Generate a new user ID by incrementing the last ID in the array
+  const lastUserId = userDetails.length > 0 ? userDetails[userDetails.length - 1].id : 0;
+  const newUserId = lastUserId + 1;
+
+  // Create a new user object
+  const newUser = {
+    id: newUserId,
+    name,
+    mail,
+    number,
+  };
+
+  // Add the new user to the userDetails array
+  userDetails.push(newUser);
+
+  // Update the userDetails.json file with the new user data
+  fs.writeFileSync(`${__dirname}/data/userDetails.json`, JSON.stringify(userDetails, null, 2));
+
+  // Return a success response with the newly created user details
+  res.status(201).json({
+    status: "Success",
+    message: "User registered successfully",
+    data: {
+      newUser,
+    },
+  });
 });
 
 module.exports = app;
